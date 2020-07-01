@@ -1,9 +1,14 @@
+FROM adoptopenjdk:14-jre-hotspot as builder
+
+RUN \
+    apt-get update \
+    && apt-get install -y git \
+    && git clone https://github.com/OpenAPITools/openapi-style-validator.git \
+    && cd openapi-style-validator \
+    && ./gradlew assemble
+
 FROM adoptopenjdk:14-jre-hotspot
 
-ENV osv_cli_version 1.3
+COPY --from=builder /openapi-style-validator/cli/build/libs/openapi-style-validator-cli-*-all.jar /application/openapi-style-validator-cli-all.jar 
 
-RUN curl https://repo1.maven.org/maven2/org/openapitools/openapistylevalidator/openapi-style-validator-cli/${osv_cli_version}/openapi-style-validator-cli-${osv_cli_version}-all.jar -O \
-    && ls -al \
-    && pwd
-
-ENTRYPOINT [ "java", "-jar", "openapi-style-validator-cli-1.3-all.jar" ]
+ENTRYPOINT [ "java", "-jar", "/application/openapi-style-validator-cli-all.jar" ]
